@@ -31,18 +31,22 @@ RSpec.describe TaxCalculator do
 
     describe 'import duty rules' do
       context 'when product is tax-exempt' do
-        it "applies only import duty to imported #{category} products (no basic sales tax)" do
-          product = build(:product, category: category, imported: true, base_price: 10.00)
-          # 10.00 * 0.05 = 0.50
-          expect(calculator.calculate(product)).to eq(0.50)
+        BasicSalesTaxRule::TAX_EXEMPT_CATEGORIES.each do |category|
+          it "applies only import duty to imported #{category} products (no basic sales tax)" do
+            product = build(:product, category: category, imported: true, base_price: 10.00)
+            # 10.00 * 0.05 = 0.50
+            expect(calculator.calculate(product)).to eq(0.50)
+          end
         end
       end
 
       context 'when product is not tax-exempt' do
-        it 'applies both basic sales tax and import duty in cascade (compound)' do
+        it 'applies both basic sales tax and import duty, each rounded independently, then summed' do
           product = build(:product, category: :other, imported: true, base_price: 27.99)
-          # (27.99 * 1.10) * 1.05 = 30.789 * 1.05 = 32.32845 - 27.99 = 4.33845, rounded up to nearest 0.05 = 4.35
-          expect(calculator.calculate(product)).to be_within(0.001).of(4.35)
+          # basic: 27.99 * 0.10 = 2.799, rounded up to 2.80
+          # import: 27.99 * 0.05 = 1.3995, rounded up to 1.40
+          # total: 2.80 + 1.40 = 4.20
+          expect(calculator.calculate(product)).to be_within(0.001).of(4.20)
         end
       end
     end
@@ -102,16 +106,20 @@ RSpec.describe TaxCalculator do
 
       it 'calculates correct tax for imported bottle of perfume' do
         product = build(:product, name: 'imported bottle of perfume', category: :other, imported: true, base_price: 47.50)
-        # (47.50 * 1.10) * 1.05 = 52.25 * 1.05 = 54.8625 - 47.50 = 7.3625, rounded up to 7.40
-        expect(calculator.calculate(product)).to eq(7.40)
+        # basic: 47.50 * 0.10 = 4.75 (already a multiple of 0.05)
+        # import: 47.50 * 0.05 = 2.375, rounded up to 2.40
+        # total: 4.75 + 2.40 = 7.15
+        expect(calculator.calculate(product)).to eq(7.15)
       end
     end
 
     context 'example from requirements - Input 3' do
       it 'calculates correct tax for imported bottle of perfume (27.99)' do
         product = build(:product, name: 'imported bottle of perfume', category: :other, imported: true, base_price: 27.99)
-        # (27.99 * 1.10) * 1.05 = 30.789 * 1.05 = 32.32845 - 27.99 = 4.33845, rounded up to 4.35
-        expect(calculator.calculate(product)).to be_within(0.001).of(4.35)
+        # basic: 27.99 * 0.10 = 2.799, rounded up to 2.80
+        # import: 27.99 * 0.05 = 1.3995, rounded up to 1.40
+        # total: 2.80 + 1.40 = 4.20
+        expect(calculator.calculate(product)).to be_within(0.001).of(4.20)
       end
 
       it 'calculates correct tax for bottle of perfume (18.99)' do

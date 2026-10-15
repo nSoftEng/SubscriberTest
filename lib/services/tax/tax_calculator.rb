@@ -8,21 +8,17 @@ class TaxCalculator
     @tax_rules = tax_rules
   end
 
-  # Calculates the total tax amount for a product using compound taxes
-  # Taxes are applied in cascade: (price * (1 + tax1)) * (1 + tax2) - price
+  # Calculates the total tax amount for a product
+  # Each applicable rule's tax is rounded to the nearest 0.05 independently,
+  # then the rounded amounts are summed
   # @param product [Product] the product to calculate tax for
-  # @return [Float] the tax amount rounded to nearest 0.05
+  # @return [Float] the tax amount
   def calculate(product)
     applicable_rules = @tax_rules.select { |rule| rule.applies_to?(product) }
 
-    # Apply taxes in cascade (compound)
-    final_price = applicable_rules.reduce(product.base_price) do |price, rule|
-      price * (1 + rule.rate)
+    applicable_rules.sum do |rule|
+      round_up_to_nearest_nickel(product.base_price * rule.rate)
     end
-
-    # Calculate total tax (final price - base price)
-    raw_tax = final_price - product.base_price
-    round_up_to_nearest_nickel(raw_tax)
   end
 
   private
