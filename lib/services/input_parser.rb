@@ -29,7 +29,7 @@ class InputParser
   def parse_line(line)
     return nil if line.empty?
 
-    match = line.match(/^(-?\d+)\s+(.+?)\s+at\s+(-?[\d.]+)$/)
+    match = line.match(/^(-?\d+)\s+(.+?)\s+at\s+(-?\d+(?:\.\d+)?)$/)
     return nil unless match
 
     build_line_item(match)

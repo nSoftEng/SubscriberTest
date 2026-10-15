@@ -101,6 +101,26 @@ RSpec.describe InputParser do
       expect(receipt.line_items.size).to eq(1)
     end
 
+    it 'ignores a line with a malformed price such as a lone dot' do
+      receipt = parser.parse(<<~INPUT)
+        1 book at 12.49
+        1 music CD at .
+      INPUT
+
+      expect(receipt.line_items.size).to eq(1)
+      expect(receipt.line_items.first.product.name).to eq('book')
+    end
+
+    it 'ignores a line with multiple dots in the price' do
+      receipt = parser.parse(<<~INPUT)
+        1 book at 12.49
+        1 music CD at 1.2.3
+      INPUT
+
+      expect(receipt.line_items.size).to eq(1)
+      expect(receipt.line_items.first.product.name).to eq('book')
+    end
+
     it 'skips a line with a zero quantity without aborting the rest of the receipt' do
       receipt = parser.parse(<<~INPUT)
         1 book at 12.49
