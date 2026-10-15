@@ -31,6 +31,11 @@ class Product
     imported
   end
 
+  def category=(new_category)
+    validate_category!(new_category)
+    @category = new_category
+  end
+
   private
 
   def validate_name!(name)

@@ -1,14 +1,21 @@
-# Use official Ruby image with latest stable version
-FROM ruby:4.0.7
+# Builder stage: compile native-extension gems (e.g. json) with build-essential
+FROM ruby:4.0.7-slim AS builder
 
-# Set working directory
 WORKDIR /app
 
-# Copy Gemfile for dependencies
-COPY Gemfile ./
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends build-essential && \
+    rm -rf /var/lib/apt/lists/*
 
-# Install bundler and dependencies
+COPY Gemfile Gemfile.lock ./
 RUN bundle install
+
+# Final stage: slim image, no compiler, just the installed gems
+FROM ruby:4.0.7-slim
+
+WORKDIR /app
+
+COPY --from=builder /usr/local/bundle /usr/local/bundle
 
 # Copy application code
 COPY . .
