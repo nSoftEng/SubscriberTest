@@ -16,10 +16,9 @@ class InputParser
   def parse(input)
     receipt = Receipt.new
 
-    input.each_line do |line|
-      line_item = parse_line(line.strip)
-      receipt.add_item(line_item) if line_item
-    end
+    line_items = input.each_line.filter_map { |line| parse_line(line.strip) }
+    classify_concurrently!(line_items)
+    line_items.each { |line_item| receipt.add_item(line_item) }
 
     receipt
   end
@@ -48,9 +47,14 @@ class InputParser
     # Product validates, before paying for a classify call (network round trip),
     # so an invalid line never waits on the classifier.
     product = build_product(description, price)
-    product.category = determine_category(description)
 
     LineItem.new(quantity: quantity, product: product)
+  end
+
+  def classify_concurrently!(line_items)
+    line_items.map do |line_item|
+      Thread.new { line_item.product.category = determine_category(line_item.product.description) }
+    end.each(&:join)
   end
 
   def validate_quantity!(quantity)
