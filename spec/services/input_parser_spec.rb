@@ -24,7 +24,7 @@ RSpec.describe InputParser do
 
       expect(receipt.line_items.size).to eq(1)
       expect(item.quantity).to eq(1)
-      expect(item.product.name).to eq('book')
+      expect(item.product.description).to eq('book')
       expect(item.product.base_price).to eq(12.49)
       expect(item.product.category).to eq(:book)
       expect(item.product.imported).to be false
@@ -40,7 +40,7 @@ RSpec.describe InputParser do
       INPUT
 
       expect(receipt.line_items.size).to eq(2)
-      expect(receipt.line_items.map { |i| i.product.name }).to eq(['book', 'music CD'])
+      expect(receipt.line_items.map { |i| i.product.description }).to eq(['book', 'music CD'])
     end
 
     it 'marks a product as imported when the description contains "imported"' do
@@ -108,7 +108,7 @@ RSpec.describe InputParser do
       INPUT
 
       expect(receipt.line_items.size).to eq(1)
-      expect(receipt.line_items.first.product.name).to eq('book')
+      expect(receipt.line_items.first.product.description).to eq('book')
     end
 
     it 'ignores a line with multiple dots in the price' do
@@ -118,7 +118,7 @@ RSpec.describe InputParser do
       INPUT
 
       expect(receipt.line_items.size).to eq(1)
-      expect(receipt.line_items.first.product.name).to eq('book')
+      expect(receipt.line_items.first.product.description).to eq('book')
     end
 
     it 'skips a line with a zero quantity without aborting the rest of the receipt' do
@@ -128,7 +128,7 @@ RSpec.describe InputParser do
       INPUT
 
       expect(receipt.line_items.size).to eq(1)
-      expect(receipt.line_items.first.product.name).to eq('book')
+      expect(receipt.line_items.first.product.description).to eq('book')
     end
 
     it 'skips a line with a negative price, warning instead of staying silent' do
@@ -139,7 +139,7 @@ RSpec.describe InputParser do
         INPUT
 
         expect(receipt.line_items.size).to eq(1)
-        expect(receipt.line_items.first.product.name).to eq('book')
+        expect(receipt.line_items.first.product.description).to eq('book')
       end.to output(/Skipping invalid line.*box of hot dogs.*-987/).to_stderr
     end
 
@@ -151,7 +151,7 @@ RSpec.describe InputParser do
         INPUT
 
         expect(receipt.line_items.size).to eq(1)
-        expect(receipt.line_items.first.product.name).to eq('book')
+        expect(receipt.line_items.first.product.description).to eq('book')
       end.to output(/Skipping invalid line.*music CD/).to_stderr
     end
 
@@ -159,7 +159,7 @@ RSpec.describe InputParser do
       receipt = parser.parse("   1 book at 12.49   \n")
 
       expect(receipt.line_items.size).to eq(1)
-      expect(receipt.line_items.first.product.name).to eq('book')
+      expect(receipt.line_items.first.product.description).to eq('book')
     end
 
     it 'returns an empty receipt for blank input' do

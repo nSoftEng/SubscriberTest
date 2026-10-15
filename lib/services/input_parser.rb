@@ -6,7 +6,7 @@ require_relative '../models/receipt'
 require_relative '../models/validation_error'
 require_relative 'product_classifier'
 
-# Format expected: "quantity product_name at price"
+# Format expected: "quantity product_description at price"
 # Example: "2 book at 12.49"
 class InputParser
   def initialize(classifier: ProductClassifier.new)
@@ -16,10 +16,9 @@ class InputParser
   def parse(input)
     receipt = Receipt.new
 
-    input.each_line do |line|
-      line_item = parse_line(line.strip)
-      receipt.add_item(line_item) if line_item
-    end
+    line_items = input.each_line.filter_map { |line| parse_line(line.strip) }
+    classify_concurrently!(line_items)
+    line_items.each { |line_item| receipt.add_item(line_item) }
 
     receipt
   end
@@ -48,9 +47,14 @@ class InputParser
     # Product validates, before paying for a classify call (network round trip),
     # so an invalid line never waits on the classifier.
     product = build_product(description, price)
-    product.category = determine_category(description)
 
     LineItem.new(quantity: quantity, product: product)
+  end
+
+  def classify_concurrently!(line_items)
+    line_items.map do |line_item|
+      Thread.new { line_item.product.category = determine_category(line_item.product.description) }
+    end.each(&:join)
   end
 
   def validate_quantity!(quantity)
@@ -59,13 +63,14 @@ class InputParser
     raise LineItemValidationError.new(
       field: :quantity,
       value: quantity,
-      message: "LineItem quantity must be greater than zero, got: #{quantity}"
+      klass: self.class,
+      message: "Quantity must be greater than zero"
     )
   end
 
   def build_product(description, price)
     Product.new(
-      name: description,
+      description: description,
       base_price: price,
       category: :other,
       imported: imported?(description)

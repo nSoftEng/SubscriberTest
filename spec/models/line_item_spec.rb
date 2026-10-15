@@ -33,7 +33,8 @@ RSpec.describe LineItem do
         }.to raise_error(LineItemValidationError) do |error|
           expect(error.field).to eq(:quantity)
           expect(error.value).to be_nil
-          expect(error.message).to eq('LineItem quantity cannot be nil')
+          expect(error.klass).to eq(LineItem)
+          expect(error.message).to eq('Quantity cannot be nil')
         end
       end
 
@@ -90,7 +91,7 @@ RSpec.describe LineItem do
         }.to raise_error(LineItemValidationError) do |error|
           expect(error.field).to eq(:product)
           expect(error.value).to be_nil
-          expect(error.message).to eq('LineItem product cannot be nil')
+          expect(error.message).to eq('Product cannot be nil')
         end
       end
 
@@ -100,7 +101,7 @@ RSpec.describe LineItem do
         }.to raise_error(LineItemValidationError) do |error|
           expect(error.field).to eq(:product)
           expect(error.value).to eq('book')
-          expect(error.message).to include('must be a Product')
+          expect(error.message).to eq('Product is invalid')
         end
       end
     end
@@ -111,7 +112,7 @@ RSpec.describe LineItem do
           LineItem.new(quantity: 1, product: product, tax_calculator: nil)
         }.to raise_error(LineItemValidationError) do |error|
           expect(error.field).to eq(:tax_calculator)
-          expect(error.message).to include('must respond to #calculate')
+          expect(error.message).to eq('Tax calculator is invalid')
         end
       end
 
@@ -120,7 +121,7 @@ RSpec.describe LineItem do
           LineItem.new(quantity: 1, product: product, tax_calculator: Object.new)
         }.to raise_error(LineItemValidationError) do |error|
           expect(error.field).to eq(:tax_calculator)
-          expect(error.message).to include('must respond to #calculate')
+          expect(error.message).to eq('Tax calculator is invalid')
         end
       end
     end
@@ -129,7 +130,7 @@ RSpec.describe LineItem do
   describe '#to_s' do
     it 'formats the price including tax when the product is not tax-exempt' do
       # music CD: shelf 14.99 + tax 1.50 = 16.49
-      music_cd = build(:product, name: 'music CD', category: :other, base_price: 14.99)
+      music_cd = build(:product, description: 'music CD', category: :other, base_price: 14.99)
       line_item = LineItem.new(quantity: 1, product: music_cd)
 
       expect(line_item.to_s).to eq('1 music CD: 16.49')

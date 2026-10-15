@@ -35,7 +35,7 @@ class LineItem
 
   # @return [String] formatted line for receipt output
   def to_s
-    format('%d %s: %.2f', quantity, product.name, total_price)
+    format('%d %s: %.2f', quantity, product.description, total_price)
   end
 
   private
@@ -45,7 +45,8 @@ class LineItem
       raise LineItemValidationError.new(
         field: :quantity,
         value: quantity,
-        message: "LineItem quantity cannot be nil"
+        klass: self.class,
+        message: "Quantity cannot be nil"
       )
     end
 
@@ -55,7 +56,8 @@ class LineItem
       raise LineItemValidationError.new(
         field: :quantity,
         value: quantity,
-        message: "LineItem quantity must be a valid integer, got: #{quantity.inspect}"
+        klass: self.class,
+        message: "Quantity must be a valid integer"
       )
     end
 
@@ -63,7 +65,8 @@ class LineItem
       raise LineItemValidationError.new(
         field: :quantity,
         value: quantity,
-        message: "LineItem quantity must be greater than zero, got: #{quantity_value}"
+        klass: self.class,
+        message: "Quantity must be greater than zero"
       )
     end
 
@@ -75,7 +78,8 @@ class LineItem
       raise LineItemValidationError.new(
         field: :product,
         value: product,
-        message: "LineItem product cannot be nil"
+        klass: self.class,
+        message: "Product cannot be nil"
       )
     end
 
@@ -83,7 +87,8 @@ class LineItem
       raise LineItemValidationError.new(
         field: :product,
         value: product,
-        message: "LineItem product must be a Product, got: #{product.class}"
+        klass: self.class,
+        message: "Product is invalid"
       )
     end
   end
@@ -93,7 +98,8 @@ class LineItem
       raise LineItemValidationError.new(
         field: :tax_calculator,
         value: tax_calculator,
-        message: "LineItem tax_calculator must respond to #calculate, got: #{tax_calculator.class}"
+        klass: self.class,
+        message: "Tax calculator is invalid"
       )
     end
   end
