@@ -58,6 +58,9 @@ class InputParser
 
   def determine_category(description)
     @classifier.classify(description)
+  rescue ProductClassificationError => e
+    warn "Could not classify #{description.inspect}, defaulting to :other (#{e.message})"
+    :other
   end
 
   def imported?(description)
