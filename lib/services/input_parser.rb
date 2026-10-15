@@ -43,15 +43,31 @@ class InputParser
     description = match[2]
     price = match[3].to_f
 
+    validate_quantity!(quantity)
+
+    # Product validates, before paying for a classify call (network round trip),
+    # so an invalid line never waits on the classifier.
     product = build_product(description, price)
+    product.category = determine_category(description)
+
     LineItem.new(quantity: quantity, product: product)
+  end
+
+  def validate_quantity!(quantity)
+    return if quantity.positive?
+
+    raise LineItemValidationError.new(
+      field: :quantity,
+      value: quantity,
+      message: "LineItem quantity must be greater than zero, got: #{quantity}"
+    )
   end
 
   def build_product(description, price)
     Product.new(
       name: description,
       base_price: price,
-      category: determine_category(description),
+      category: :other,
       imported: imported?(description)
     )
   end
