@@ -1,43 +1,36 @@
 # frozen_string_literal: true
 
 require_relative 'product'
+require_relative 'validation_error'
 require_relative '../services/tax/tax_calculator'
 
-class LineItemValidationError < StandardError
-  attr_reader :field, :value
-
-  def initialize(field:, value:, message:)
-    @field = field
-    @value = value
-    super(message)
-  end
+class LineItemValidationError < ValidationError
 end
 
 class LineItem
   attr_reader :quantity, :product
 
   def initialize(quantity:, product:, tax_calculator: TaxCalculator.new)
-    validate_quantity!(quantity)
+    @quantity = validate_quantity!(quantity)
     validate_product!(product)
     validate_tax_calculator!(tax_calculator)
 
-    @quantity = Integer(quantity.to_s, 10)
     @product = product
     @tax_calculator = tax_calculator
   end
 
   # @return [Float] the total shelf price (without tax) for this line
   def shelf_price
-    quantity * product.base_price
+    @shelf_price ||= quantity * product.base_price
   end
 
   # @return [Float] the total tax amount for this line
   def tax_amount
-    quantity * @tax_calculator.calculate(product)
+    @tax_amount ||= quantity * @tax_calculator.calculate(product)
   end
 
   def total_price
-    shelf_price + tax_amount
+    @total_price ||= shelf_price + tax_amount
   end
 
   # @return [String] formatted line for receipt output
@@ -73,6 +66,8 @@ class LineItem
         message: "LineItem quantity must be greater than zero, got: #{quantity_value}"
       )
     end
+
+    quantity_value
   end
 
   def validate_product!(product)

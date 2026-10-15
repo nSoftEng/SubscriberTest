@@ -1,14 +1,8 @@
 # frozen_string_literal: true
 
-# Custom error class for product validation errors
-class ProductValidationError < StandardError
-  attr_reader :field, :value
+require_relative 'validation_error'
 
-  def initialize(field:, value:, message:)
-    @field = field
-    @value = value
-    super(message)
-  end
+class ProductValidationError < ValidationError
 end
 
 class Product
