@@ -137,10 +137,13 @@ connect your terminal's STDIN to the container.
 docker compose run --rm sales-tax
 ```
 
-This builds the image if needed, starts the `ollama` dependency for you, and
-wires `OLLAMA_URL`/`OLLAMA_MODEL` automatically. It behaves exactly like
-running locally: same header, `checkout`/`exit` while building a basket, and
-the `new`/`exit` prompt after each receipt.
+This builds the image if needed, starts the `ollama` dependency, pulls the
+`qwen3:0.6b` model into it (via the one-shot `ollama-pull` service — only
+needed once, since the model is cached in the `ollama` named volume), and
+wires `OLLAMA_URL`/`OLLAMA_MODEL` automatically. The first run takes longer
+while the model downloads; subsequent runs start immediately. Once up, it
+behaves exactly like running locally: same header, `checkout`/`exit` while
+building a basket, and the `new`/`exit` prompt after each receipt.
 
 ## Input format
 
