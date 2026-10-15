@@ -41,7 +41,11 @@ class ProductClassifier
       raise ProductClassificationError, "Ollama returned HTTP #{response.code}: #{response.body}"
     end
 
-    text = fetch_key(JSON.parse(response.body), 'response')
+    text = fetch_key(JSON.parse(response.body.to_s), 'response')
+    unless text.is_a?(String)
+      raise ProductClassificationError, "Ollama 'response' field was not a string: #{text.inspect}"
+    end
+
     json = text[/\{.*?\}/m] || text
     fetch_key(JSON.parse(json), 'category')
   rescue JSON::ParserError, KeyError => e
