@@ -4,7 +4,14 @@ require 'net/http'
 require 'json'
 require 'active_support/inflector'
 
-class ProductClassificationError < StandardError; end
+class ProductClassificationError < StandardError
+  attr_reader :klass
+
+  def initialize(message, klass:)
+    @klass = klass
+    super(message)
+  end
+end
 
 class ProductClassifier
   CATEGORIES = %w[book food medical other].freeze
@@ -28,7 +35,7 @@ class ProductClassifier
     category = normalize_category(extract_category(post(payload_for(description))))
 
     unless CATEGORIES.include?(category)
-      raise ProductClassificationError, "Unknown category returned: #{category.inspect}"
+      raise ProductClassificationError.new("Classifier returned an unknown category", klass: self.class)
     end
 
     category.to_sym
@@ -38,18 +45,18 @@ class ProductClassifier
 
   def extract_category(response)
     unless response.is_a?(Net::HTTPSuccess)
-      raise ProductClassificationError, "Ollama returned HTTP #{response.code}: #{response.body}"
+      raise ProductClassificationError.new("Classifier service returned an unsuccessful response", klass: self.class)
     end
 
     text = fetch_key(JSON.parse(response.body.to_s), 'response')
     unless text.is_a?(String)
-      raise ProductClassificationError, "Ollama 'response' field was not a string: #{text.inspect}"
+      raise ProductClassificationError.new("Classifier service returned an invalid response", klass: self.class)
     end
 
     json = text[/\{.*?\}/m] || text
     fetch_key(JSON.parse(json), 'category')
-  rescue JSON::ParserError, KeyError => e
-    raise ProductClassificationError, "Invalid response from Ollama: #{e.message}"
+  rescue JSON::ParserError, KeyError
+    raise ProductClassificationError.new("Classifier service returned an invalid response", klass: self.class)
   end
 
   def fetch_key(hash, key)
@@ -126,7 +133,7 @@ class ProductClassifier
                                           open_timeout: @timeout, read_timeout: @timeout) do |http|
       http.request(request)
     end
-  rescue SystemCallError, Timeout::Error, SocketError => e
-    raise ProductClassificationError, "Could not reach Ollama at #{@uri}: #{e.message}"
+  rescue SystemCallError, Timeout::Error, SocketError
+    raise ProductClassificationError.new("Could not reach the classification service", klass: self.class)
   end
 end

@@ -8,15 +8,15 @@ RSpec.describe Receipt do
   subject(:receipt) { described_class.new }
 
   let(:book)          { build(:domestic_book, base_price: 12.49) }
-  let(:music_cd)      { build(:product, category: :other, name: 'music CD', base_price: 14.99) }
-  let(:chocolate_bar) { build(:domestic_food, name: 'chocolate bar', base_price: 0.85) }
+  let(:music_cd)      { build(:product, category: :other, description: 'music CD', base_price: 14.99) }
+  let(:chocolate_bar) { build(:domestic_food, description: 'chocolate bar', base_price: 0.85) }
 
   let(:book_item)       { LineItem.new(quantity: 2, product: book) }
   let(:music_cd_item)   { LineItem.new(quantity: 1, product: music_cd) }
   let(:chocolate_item)  { LineItem.new(quantity: 1, product: chocolate_bar) }
 
-  def line_item(quantity:, name:, category:, imported: false, base_price:)
-    product = build(:product, name: name, category: category, imported: imported, base_price: base_price)
+  def line_item(quantity:, description:, category:, imported: false, base_price:)
+    product = build(:product, description: description, category: category, imported: imported, base_price: base_price)
     LineItem.new(quantity: quantity, product: product)
   end
 
@@ -68,7 +68,7 @@ RSpec.describe Receipt do
       # import: 47.50 * 0.05 = 2.375, rounded up to 2.40
       # total: 4.75 + 2.40 = 7.15
       perfume_item = line_item(quantity: 1, 
-                                name: 'imported bottle of perfume', 
+                                description: 'imported bottle of perfume', 
                                 category: :other, 
                                 imported: true,
                                 base_price: 47.50
@@ -142,14 +142,14 @@ RSpec.describe Receipt do
     it 'matches the full requirements example for Input 2' do
       receipt
         .add_item(line_item(quantity: 1, 
-                              name: 'imported box of chocolates', 
+                              description: 'imported box of chocolates', 
                               category: :food, 
                               imported: true,
                               base_price: 10.00
                            )
                   )
         .add_item(line_item(quantity: 1, 
-                              name: 'imported bottle of perfume', 
+                              description: 'imported bottle of perfume', 
                               category: :other, 
                               imported: true,
                               base_price: 47.50
@@ -169,16 +169,16 @@ RSpec.describe Receipt do
     it 'matches the full requirements example for Input 3' do
       receipt
         .add_item(line_item(quantity: 1, 
-                            name: 'imported bottle of perfume', 
+                            description: 'imported bottle of perfume', 
                             category: :other, 
                             imported: true,
                             base_price: 27.99
                           )
                   )
-        .add_item(line_item(quantity: 1, name: 'bottle of perfume', category: :other, base_price: 18.99))
-        .add_item(line_item(quantity: 1, name: 'packet of headache pills', category: :medical, base_price: 9.75))
+        .add_item(line_item(quantity: 1, description: 'bottle of perfume', category: :other, base_price: 18.99))
+        .add_item(line_item(quantity: 1, description: 'packet of headache pills', category: :medical, base_price: 9.75))
         .add_item(line_item(quantity: 3, 
-                            name: 'imported boxes of chocolates', 
+                            description: 'imported boxes of chocolates', 
                             category: :food, 
                             imported: true,
                             base_price: 11.25

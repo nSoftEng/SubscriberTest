@@ -6,21 +6,21 @@ class ProductValidationError < ValidationError
 end
 
 class Product
-  attr_reader :name, :base_price, :category, :imported
+  attr_reader :description, :base_price, :category, :imported
 
   VALID_CATEGORIES = %i[book food medical other].freeze
 
-  # @param name [String] the product name
+  # @param description [String] the product description
   # @param base_price [Float] the shelf price without taxes
   # @param category [Symbol] the product category (:book, :food, :medical, :other)
   # @param imported [Boolean] whether the product is imported
-  def initialize(name:, base_price:, category: :other, imported: false)
-    validate_name!(name)
+  def initialize(description:, base_price:, category: :other, imported: false)
+    validate_description!(description)
     validate_base_price!(base_price)
     validate_category!(category)
     validate_imported!(imported)
 
-    @name = name.strip
+    @description = description.strip
     @base_price = base_price.to_f
     @category = category
     @imported = imported
@@ -38,20 +38,22 @@ class Product
 
   private
 
-  def validate_name!(name)
-    if name.nil?
+  def validate_description!(description)
+    if description.nil?
       raise ProductValidationError.new(
-        field: :name,
-        value: name,
-        message: "Product name cannot be nil"
+        field: :description,
+        value: description,
+        klass: self.class,
+        message: "Description cannot be nil"
       )
     end
 
-    if name.strip.empty?
+    if description.strip.empty?
       raise ProductValidationError.new(
-        field: :name,
-        value: name,
-        message: "Product name cannot be empty"
+        field: :description,
+        value: description,
+        klass: self.class,
+        message: "Description cannot be empty"
       )
     end
   end
@@ -61,7 +63,8 @@ class Product
       raise ProductValidationError.new(
         field: :base_price,
         value: price,
-        message: "Product base_price cannot be nil"
+        klass: self.class,
+        message: "Base price cannot be nil"
       )
     end
 
@@ -71,7 +74,8 @@ class Product
       raise ProductValidationError.new(
         field: :base_price,
         value: price,
-        message: "Product base_price must be a valid number, got: #{price.inspect}"
+        klass: self.class,
+        message: "Base price must be a valid number"
       )
     end
 
@@ -79,7 +83,8 @@ class Product
       raise ProductValidationError.new(
         field: :base_price,
         value: price,
-        message: "Product base_price cannot be negative, got: #{price_value}"
+        klass: self.class,
+        message: "Base price cannot be negative"
       )
     end
   end
@@ -89,7 +94,8 @@ class Product
       raise ProductValidationError.new(
         field: :category,
         value: category,
-        message: "Invalid category: #{category.inspect}. Must be one of: #{VALID_CATEGORIES.join(', ')}"
+        klass: self.class,
+        message: "Invalid category. Must be one of: #{VALID_CATEGORIES.join(', ')}"
       )
     end
   end
@@ -99,7 +105,8 @@ class Product
       raise ProductValidationError.new(
         field: :imported,
         value: imported,
-        message: "Product imported must be true or false, got: #{imported.inspect}"
+        klass: self.class,
+        message: "Imported must be true or false"
       )
     end
   end

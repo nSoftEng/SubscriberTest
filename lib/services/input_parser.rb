@@ -6,7 +6,7 @@ require_relative '../models/receipt'
 require_relative '../models/validation_error'
 require_relative 'product_classifier'
 
-# Format expected: "quantity product_name at price"
+# Format expected: "quantity product_description at price"
 # Example: "2 book at 12.49"
 class InputParser
   def initialize(classifier: ProductClassifier.new)
@@ -59,13 +59,14 @@ class InputParser
     raise LineItemValidationError.new(
       field: :quantity,
       value: quantity,
-      message: "LineItem quantity must be greater than zero, got: #{quantity}"
+      klass: self.class,
+      message: "Quantity must be greater than zero"
     )
   end
 
   def build_product(description, price)
     Product.new(
-      name: description,
+      description: description,
       base_price: price,
       category: :other,
       imported: imported?(description)

@@ -69,21 +69,25 @@ RSpec.describe ProductClassifier do
       stub_ollama(ollama_response(generate_body('toys')))
 
       expect { classifier.classify('teddy bear') }
-        .to raise_error(ProductClassificationError, /Unknown category/)
+        .to raise_error(ProductClassificationError, /unknown category/i) do |error|
+          expect(error.klass).to eq(ProductClassifier)
+        end
     end
 
     it 'raises ProductClassificationError for a malformed response' do
       stub_ollama(ollama_response('not json'))
 
       expect { classifier.classify('book') }
-        .to raise_error(ProductClassificationError, /Invalid response/)
+        .to raise_error(ProductClassificationError, /invalid response/i) do |error|
+          expect(error.klass).to eq(ProductClassifier)
+        end
     end
 
     it 'raises ProductClassificationError when the response JSON is not an object' do
       stub_ollama(ollama_response({ response: 'null' }.to_json))
 
       expect { classifier.classify('book') }
-        .to raise_error(ProductClassificationError, /Invalid response/)
+        .to raise_error(ProductClassificationError, /invalid response/i)
     end
 
     it 'parses the category from a response with multiple brace-delimited chunks' do
@@ -98,14 +102,20 @@ RSpec.describe ProductClassifier do
       stub_ollama(ollama_response('model not found', response_class: Net::HTTPNotFound, code: '404'))
 
       expect { classifier.classify('book') }
-        .to raise_error(ProductClassificationError, /HTTP 404/)
+        .to raise_error(ProductClassificationError, /unsuccessful response/i) do |error|
+          expect(error.klass).to eq(ProductClassifier)
+          expect(error.message).not_to match(/404|ollama/i)
+        end
     end
 
-    it 'raises ProductClassificationError when Ollama is unreachable' do
+    it 'raises ProductClassificationError when the classification service is unreachable' do
       allow(Net::HTTP).to receive(:start).and_raise(Errno::ECONNREFUSED)
 
       expect { classifier.classify('book') }
-        .to raise_error(ProductClassificationError, /Could not reach Ollama/)
+        .to raise_error(ProductClassificationError, /could not reach/i) do |error|
+          expect(error.klass).to eq(ProductClassifier)
+          expect(error.message).not_to match(/ollama/i)
+        end
     end
   end
 end
